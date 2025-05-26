@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entrenamiento de Formas</title>
+
+  <!-- Librerías p5.js y ml5.js -->
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.4.0/lib/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ml5@0.12.2/dist/ml5.min.js"></script>
+
+  <style>
+    body {
+      background-color: antiquewhite;
+      font-family: sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    let acutanguloA = [];
+    let acutanguloB = [];
+    let trianguloA = [];
+    let trianguloB = [];
+    let trianguloC = [];
+    let trianguloD = [];
+
+    let shapeClassifier;
+    let totalImages = 100;
+    let imagesLoaded = 0;
+
+    function preload() {
+      for (let i = 0; i < totalImages; i++) {
+        let index = nf(i + 1, 3, 0);
+        acutanguloA[i] = loadImage(`data/AcutanguloA${index}.png`, imageLoaded);
+        acutanguloB[i] = loadImage(`data/AcutanguloB${index}.png`, imageLoaded);
+        trianguloA[i] = loadImage(`data/TrianguloRectanguloA${index}.png`, imageLoaded);
+        trianguloB[i] = loadImage(`data/TrianguloRectanguloB${index}.png`, imageLoaded);
+        trianguloC[i] = loadImage(`data/TrianguloRectanguloC${index}.png`, imageLoaded);
+        trianguloD[i] = loadImage(`data/TrianguloRectanguloD${index}.png`, imageLoaded);
+      }
+    }
+
+    function imageLoaded() {
+      imagesLoaded++;
+      if (imagesLoaded === totalImages * 6) {
+        setup(); // Inicia cuando todas las imágenes están cargadas
+      }
+    }
+
+    function setup() {
+      noCanvas();
+
+      let options = {
+        inputs: [64, 64, 4], // Ancho, alto, canales
+        task: 'imageClassification',
+        debug: true
+      };
+
+      shapeClassifier = ml5.neuralNetwork(options);
+
+      // Añadir imágenes y etiquetas
+      for (let i = 0; i < totalImages; i++) {
+        addImageToClassifier(acutanguloA[i], 'AcutanguloA');
+        addImageToClassifier(acutanguloB[i], 'AcutanguloB');
+        addImageToClassifier(trianguloA[i], 'RectanguloA');
+        addImageToClassifier(trianguloB[i], 'RectanguloB');
+        addImageToClassifier(trianguloC[i], 'RectanguloC');
+        addImageToClassifier(trianguloD[i], 'RectanguloD');
+      }
+
+      shapeClassifier.normalizeData();
+      shapeClassifier.train({ epochs: 50 }, finishedTraining);
+    }
+
+    function addImageToClassifier(img, label) {
+      img.resize(64, 64);
+      shapeClassifier.addData({ image: img }, { label: label });
+    }
+
+    function finishedTraining() {
+      console.log("✅ Entrenamiento finalizado. Guardando modelo...");
+      shapeClassifier.save();
+    }
+  </script>
+</body>
+</html>
